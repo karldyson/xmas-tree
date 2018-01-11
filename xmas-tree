@@ -1,0 +1,197 @@
+#!/usr/bin/env python
+
+from gpiozero import LEDBoard
+from gpiozero.tools import random_values
+from time import sleep
+import time
+import random
+import sys
+import types
+
+debug = False
+
+tree = LEDBoard(*range(2,28), pwm=True)
+
+levels = []
+levels.append([12, 19])
+levels.append([5, 8])
+levels.append([21])
+levels.append([4, 10, 13, 18, 22])
+levels.append([20])
+levels.append([16])
+levels.append([11])
+levels.append([6, 24])
+levels.append([2, 3, 7])
+levels.append([15])
+levels.append([9, 14, 23, 25])
+levels.append([17])
+levels.append([0])
+
+sides = []
+sides.append([2, 12, 15])
+sides.append([7, 8, 20])
+sides.append([21, 22, 23])
+sides.append([11, 14, 18])
+sides.append([19, 17, 24])
+sides.append([3, 9, 10])
+sides.append([4, 5, 6])
+sides.append([25, 13, 16])
+
+star = [0]
+
+def glimmer():
+    for led in tree:
+        led.source_delay = 0.1
+        led.source = random_values()
+
+    sleep(timeout)
+
+    for led in tree:
+        led.source = None
+
+def glow():
+    starttime = time.time()
+    runtime = 0
+    while runtime < timeout:
+        for i in range(1, 11):
+            value = i * 0.1
+            for led in tree:
+                led.value = value
+            sleep(0.05)
+
+        for i in range(10, 0, -1):
+            value = i * 0.1
+            for led in tree:
+                led.value = value
+            sleep(0.1)
+
+        runtime = time.time() - starttime
+
+def grow():
+    starttime = time.time()
+    runtime = 0
+    while runtime < timeout:
+        for i in range(len(levels)):
+            for led in [ tree[l] for l in levels[i] ]:
+                led.on()
+
+            sleep(0.05)
+
+        sleep(1)
+
+        for i in range(len(levels) - 1, -1, -1):
+            for led in [ tree[l] for l in levels[i] ]:
+                led.off()
+
+            sleep(0.05)
+
+        sleep(0.5)
+
+        runtime = time.time() - starttime
+
+def pulse(setnum=2):
+    starttime = time.time()
+    runtime = 0
+
+    vals = []
+    vals.append("test")
+    vals.append([0.1, 0.5, 1, 0.5, 0.1])
+    vals.append([0.0, 0.5, 1, 0.5, 0.0])
+
+    starvals = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    starindex = 0
+
+    while runtime < timeout:
+        for i in range(len(levels)):
+            for led in [ tree[l] for l in levels[i - 4] ]:
+                led.value = vals[setnum][0]
+            for led in [ tree[l] for l in levels[i - 3] ]:
+                led.value = vals[setnum][1]
+            for led in [ tree[l] for l in levels[i - 2] ]:
+                led.value = vals[setnum][2]
+            for led in [ tree[l] for l in levels[i - 1] ]:
+                led.value = vals[setnum][3]
+            for led in [ tree[l] for l in levels[i] ]:
+                led.value = vals[setnum][4]
+
+            tree[0].value = starvals[starindex]
+            starindex = (starindex + 1) % len(starvals)
+
+            sleep(0.05)
+
+        runtime = time.time() - starttime
+
+def pulseOne():
+    pulse(1)
+
+def pulseTwo():
+    pulse(2)
+
+def rotate(setnum=2):
+    starttime = time.time()
+    runtime = 0
+
+    vals = []
+    vals.append("test")
+    vals.append([0.1, 0.5, 1, 0.5, 0.1])
+    vals.append([0.0, 0.5, 1, 0.5, 0.0])
+
+    starvals = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    starindex = 0
+
+    while runtime < timeout:
+        for i in range(len(sides)):
+            for led in [ tree[s] for s in sides[i - 4] ]:
+                led.value = vals[setnum][0]
+            for led in [ tree[s] for s in sides[i - 3] ]:
+                led.value = vals[setnum][1]
+            for led in [ tree[s] for s in sides[i - 2] ]:
+                led.value = vals[setnum][2]
+            for led in [ tree[s] for s in sides[i - 1] ]:
+                led.value = vals[setnum][3]
+            for led in [ tree[s] for s in sides[i] ]:
+                led.value = vals[setnum][4]
+
+            tree[0].value = starvals[starindex]
+            starindex = (starindex + 1) % len(starvals)
+
+            sleep(0.05)
+
+        runtime = time.time() - starttime
+
+def rotateOne():
+    rotate(1)
+
+def rotateTwo():
+    rotate(2)
+
+functions = [glimmer, glow, grow, pulseOne, pulseTwo, rotateOne, rotateTwo]
+
+def function_exists(func):
+    try:
+        ret = type(eval(str(func)))
+        return ret in (types.FunctionType, types.BuiltinFunctionType)
+    except NameError:
+        return False
+
+while True:
+    #random.choice(functions)()
+
+    if len(sys.argv) > 1:
+        if function_exists(sys.argv[1]):
+            choice = getattr(sys.modules[__name__], sys.argv[1])
+            timeout = 2419200
+        else:
+            print sys.argv[1] + " is invalid. Choices are: "
+            for f in functions:
+                print "  * " + f.__name__
+            exit(1)
+    else:
+        timeout = 60
+        choice = random.choice(functions)
+
+    if debug:
+        print "choice is " + str(choice) + " and will change every " + str(timeout) + " seconds"
+
+    choice()
+
