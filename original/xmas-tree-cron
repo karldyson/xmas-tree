@@ -1,0 +1,5 @@
+#!/bin/bash
+if [[ `/bin/date +%m` -eq 12 ]]
+then
+	/usr/local/bin/xmas-tree &
+fi

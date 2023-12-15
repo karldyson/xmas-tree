@@ -15,6 +15,6 @@ try:
         pixel = random.choice(tree)
         pixel.color = random_color()
         pixel.brightness = random.random() ** 3
-        time.sleep(0.20)
+        time.sleep(0.10)
 except KeyboardInterrupt:
     tree.close()

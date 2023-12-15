@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+from gpiozero import PWMLED
+
+led = False
+while 1 is 1:
+    lednum = int(raw_input("LED..: "))
+
+    if led:
+        led.off()
+
+    ledval = lednum + 3
+
+    led = PWMLED(ledval)
+    led.pulse()
+
+
